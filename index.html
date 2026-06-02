@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de IA — Santiago Fraga</title>
+<link rel="icon" type="image/png" href="./Favicon_copia.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap');
+  :root { --blue-steel: #334D6F; --aesthetic-blue: #8DAABF; --rose-copper: #B88A6E; --terracotta: #A67563; --white: #FFFFFF; --slate: #212529; --light-bg: #F4F6F8; --border: #E0E4E8; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--light-bg); color: var(--slate); min-height: 100vh; }
+  header { background: var(--blue-steel); padding: 18px 40px; display: flex; align-items: center; justify-content: space-between; }
+  .logo-wrap { display: flex; align-items: center; }
+  .logo-icon { width: 42px; height: 42px; object-fit: contain; }
+  .header-sub { color: rgba(255,255,255,0.55); font-size: 0.8rem; font-weight: 300; }
+  .hero { background: var(--blue-steel); padding: 60px 40px 80px; text-align: center; position: relative; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; bottom: -30px; left: 0; right: 0; height: 60px; background: var(--light-bg); clip-path: ellipse(55% 100% at 50% 100%); z-index: 1; }
+  .hero-content { position: relative; z-index: 2; }
+  .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 3rem); color: var(--white); line-height: 1.2; max-width: 680px; margin: 0 auto 16px; }
+  .hero h1 em { color: var(--rose-copper); font-style: normal; }
+  .hero p { color: rgba(255,255,255,0.7); font-size: 1rem; max-width: 480px; margin: 0 auto; font-weight: 300; }
+  .container { max-width: 640px; margin: 0 auto; padding: 24px 20px 60px; }
+  .card { background: var(--white); border-radius: 14px; padding: 36px; box-shadow: 0 2px 20px rgba(51,77,111,0.08); margin-bottom: 20px; }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: var(--blue-steel); margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid var(--light-bg); }
+  .step-badge { display: inline-block; background: var(--rose-copper); color: var(--white); font-size: 0.68rem; font-weight: 500; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .field { margin-bottom: 20px; }
+  label { display: flex; align-items: center; gap: 6px; font-size: 0.84rem; font-weight: 500; color: var(--blue-steel); margin-bottom: 6px; }
+  label .hint { font-weight: 300; color: var(--aesthetic-blue); font-size: 0.76rem; }
+  .tooltip-wrap { position: relative; display: inline-flex; align-items: center; }
+  .tooltip-icon { width: 16px; height: 16px; background: var(--aesthetic-blue); color: white; border-radius: 50%; font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.2s; user-select: none; }
+  .tooltip-icon:hover { background: var(--blue-steel); }
+  .tooltip-popup { display: none; position: absolute; left: 22px; top: 50%; transform: translateY(-50%); background: var(--slate); color: var(--white); font-size: 0.77rem; font-weight: 300; line-height: 1.5; padding: 10px 14px; border-radius: 8px; width: 220px; z-index: 10; box-shadow: 0 4px 16px rgba(0,0,0,0.15); pointer-events: none; }
+  .tooltip-popup::before { content: ''; position: absolute; left: -6px; top: 50%; transform: translateY(-50%); border: 6px solid transparent; border-right-color: var(--slate); border-left: none; }
+  .tooltip-wrap:hover .tooltip-popup, .tooltip-wrap.active .tooltip-popup { display: block; }
+  input { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.94rem; color: var(--slate); background: var(--light-bg); transition: border-color 0.2s; outline: none; }
+  input:focus { border-color: var(--blue-steel); background: var(--white); }
+  .input-group { display: flex; gap: 12px; }
+  .input-group .field { flex: 1; }
+  .input-suffix { position: relative; }
+  .input-suffix input { padding-right: 48px; }
+  .suffix { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--aesthetic-blue); font-size: 0.84rem; pointer-events: none; }
+  .btn { width: 100%; padding: 15px; background: var(--blue-steel); color: var(--white); border: none; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.96rem; font-weight: 500; cursor: pointer; transition: background 0.2s, transform 0.1s; margin-top: 8px; }
+  .btn:hover { background: #2a3f5c; transform: translateY(-1px); }
+  .btn-copper { background: var(--rose-copper); color: var(--white); }
+  .btn-copper:hover { background: var(--terracotta); }
+  .result-preview { display: none; animation: fadeIn 0.4s ease; }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .result-box { background: var(--light-bg); border-radius: 12px; padding: 20px; text-align: center; border: 1.5px solid var(--border); }
+  .result-box .value { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--blue-steel); font-weight: 700; display: block; }
+  .result-box .unit { font-size: 0.76rem; color: var(--aesthetic-blue); font-weight: 300; margin-top: 4px; display: block; }
+  .result-box .label { font-size: 0.8rem; color: var(--slate); font-weight: 500; margin-top: 8px; display: block; }
+  .soft-gate { background: var(--blue-steel); border-radius: 12px; padding: 28px; text-align: center; color: var(--white); margin: 20px 0; }
+  .soft-gate h3 { font-family: 'Playfair Display', serif; font-size: 1.35rem; margin-bottom: 8px; }
+  .soft-gate p { font-size: 0.86rem; opacity: 0.75; margin-bottom: 20px; font-weight: 300; }
+  .capture-form { display: none; animation: fadeIn 0.4s ease; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .privacy-note { font-size: 0.71rem; color: var(--aesthetic-blue); text-align: center; margin-top: 12px; line-height: 1.5; }
+  .final-result { display: none; animation: fadeIn 0.4s ease; }
+  .saving-highlight { background: var(--blue-steel); border-radius: 12px; padding: 28px; color: var(--white); margin-bottom: 20px; }
+  .saving-highlight h3 { font-family: 'Playfair Display', serif; font-size: 1.05rem; opacity: 0.75; margin-bottom: 16px; }
+  .savings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .saving-box { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 16px; text-align: center; }
+  .saving-box .s-value { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--rose-copper); font-weight: 700; display: block; }
+  .saving-box .s-label { font-size: 0.76rem; opacity: 0.75; margin-top: 4px; display: block; }
+  .source-note { font-size: 0.71rem; color: var(--aesthetic-blue); text-align: center; margin-top: 12px; font-style: italic; }
+  .logo-final { text-align: center; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .logo-final img { max-width: 320px; width: 100%; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 480px) { .card { padding: 24px 18px; } .result-grid, .savings-grid, .form-grid { grid-template-columns: 1fr; } .input-group { flex-direction: column; gap: 0; } header { padding: 16px 20px; } .hero { padding: 40px 20px 70px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-wrap">
+    <img class="logo-icon" src="./Favicon_copia.png" alt="iA — Santiago Fraga">
+  </div>
+  <span class="header-sub">MBA Santiago Fraga Montes · IA aplicada a empresas y profesionales</span>
+</header>
+<div class="hero">
+  <div class="hero-content">
+    <h1>¿Cuánto te cuesta <em>no automatizar</em> esa tarea?</h1>
+    <p>Calcula en segundos el tiempo y dinero que inviertes cada mes en tareas que la IA puede hacer por ti.</p>
+  </div>
+</div>
+<div class="container">
+  <div class="card" id="calc-card">
+    <div class="step-badge">Paso 1 de 2 — Calcula</div>
+    <div class="card-title">Dime cómo es esa tarea</div>
+    <div class="field">
+      <label>Nombre de la tarea <span class="hint">(informativo)</span></label>
+      <input type="text" id="tarea" placeholder="Ej: Introducir facturas en el sistema">
+    </div>
+    <div class="input-group">
+      <div class="field">
+        <label>Salario mensual bruto
+          <div class="tooltip-wrap" onclick="this.classList.toggle('active')">
+            <div class="tooltip-icon">?</div>
+            <div class="tooltip-popup">Salario de la persona encargada de realizar esa tarea.</div>
+          </div>
+        </label>
+        <div class="input-suffix">
+          <input type="number" id="salario" placeholder="1.800" min="0">
+          <span class="suffix">€</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tiempo
+          <div class="tooltip-wrap" onclick="this.classList.toggle('active')">
+            <div class="tooltip-icon">?</div>
+            <div class="tooltip-popup">Tiempo que tarda una persona en realizar una vez esa tarea.</div>
+          </div>
+        </label>
+        <div class="input-suffix">
+          <input type="number" id="tiempo" placeholder="30" min="1">
+          <span class="suffix">min</span>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <label>¿Cuántas veces a la semana se realiza?</label>
+      <div class="input-suffix">
+        <input type="number" id="frecuencia" placeholder="5" min="1" max="100">
+        <span class="suffix">x/sem</span>
+      </div>
+    </div>
+    <button class="btn" onclick="calcular()">Calcular ahora →</button>
+  </div>
+  <div class="card result-preview" id="result-preview">
+    <div class="step-badge">Resultado parcial</div>
+    <div class="card-title">Esta tarea te cuesta cada mes</div>
+    <div class="result-grid">
+      <div class="result-box"><span class="value" id="res-tiempo">—</span><span class="unit">horas</span><span class="label">Tiempo mensual</span></div>
+      <div class="result-box"><span class="value" id="res-coste">—</span><span class="unit">€/mes</span><span class="label">Coste de mano de obra</span></div>
+    </div>
+    <div class="soft-gate">
+      <h3>¿Cuánto ahorrarías con IA?</h3>
+      <p>Introduce tus datos y te mostramos el ahorro real basado en benchmarks del sector.</p>
+      <button class="btn btn-copper" onclick="mostrarFormulario()">Ver mi ahorro potencial →</button>
+    </div>
+  </div>
+  <div class="card capture-form" id="capture-form">
+    <div class="step-badge">Paso 2 de 2 — Tu informe</div>
+    <div class="card-title">¿A dónde te enviamos el informe completo?</div>
+    <div class="form-grid">
+      <div class="field"><label>Nombre</label><input type="text" id="nombre" placeholder="Tu nombre"></div>
+      <div class="field"><label>Empresa o actividad</label><input type="text" id="empresa" placeholder="Ej: Gestoría López"></div>
+    </div>
+    <div class="field"><label>Email profesional</label><input type="email" id="email" placeholder="nombre@empresa.com"></div>
+    <div class="field"><label>Teléfono <span class="hint">(opcional)</span></label><input type="tel" id="telefono" placeholder="+34 600 000 000"></div>
+    <button class="btn btn-copper" onclick="mostrarResultado()">Ver mi informe completo →</button>
+    <p class="privacy-note">Tus datos se utilizan únicamente para enviarte el informe y, si lo deseas, contactar contigo.<br>Cumplimos con el RGPD. Puedes darte de baja en cualquier momento.</p>
+  </div>
+  <div class="card final-result" id="final-result">
+    <div class="step-badge">Tu informe — <span id="nombre-resultado"></span></div>
+    <div class="card-title">Lo que la IA puede ahorrarte</div>
+    <div class="saving-highlight">
+      <h3>Potencial de ahorro con automatización IA</h3>
+      <div class="savings-grid">
+        <div class="saving-box"><span class="s-value" id="ahorro-tiempo">—</span><span class="s-label">horas/mes recuperadas</span></div>
+        <div class="saving-box"><span class="s-value" id="ahorro-dinero">—</span><span class="s-label">€/mes en mano de obra</span></div>
+      </div>
+    </div>
+    <p class="source-note">Basado en: <em>Workflow Automation Benchmarks 2025</em> — reducción media del 40% en procesos rutinarios automatizados con IA.</p>
+    <div class="logo-final">
+      <img src="./Logotipo_copia.png" alt="MBA Santiago Fraga Montes — IA aplicada a empresas y profesionales">
+    </div>
+  </div>
+</div>
+<script>
+  let tiempoMensual = 0, costeMensual = 0;
+  function calcular() {
+    const salario = parseFloat(document.getElementById('salario').value);
+    const tiempo = parseFloat(document.getElementById('tiempo').value);
+    const frecuencia = parseFloat(document.getElementById('frecuencia').value);
+    if (!salario || !tiempo || !frecuencia) { alert('Por favor completa el salario, el tiempo y la frecuencia.'); return; }
+    const vecesAlMes = frecuencia * 4.33;
+    const minutosAlMes = tiempo * vecesAlMes;
+    tiempoMensual = minutosAlMes / 60;
+    costeMensual = (salario / (8 * 22 * 60)) * minutosAlMes;
+    document.getElementById('res-tiempo').textContent = tiempoMensual.toFixed(1);
+    document.getElementById('res-coste').textContent = Math.round(costeMensual) + '€';
+    document.getElementById('calc-card').style.display = 'none';
+    document.getElementById('result-preview').style.display = 'block';
+    document.getElementById('result-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function mostrarFormulario() {
+    document.getElementById('capture-form').style.display = 'block';
+    document.getElementById('capture-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function mostrarResultado() {
+    const nombre = document.getElementById('nombre').value;
+    const email = document.getElementById('email').value;
+    if (!nombre || !email) { alert('Por favor introduce tu nombre y email para ver el informe.'); return; }
+    fetch('https://hook.eu1.make.com/kpy49tqb62zug66ojcrkavby52mc63z8', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fecha: new Date().toLocaleDateString('es-ES'),
+        nombre: nombre,
+        empresa: document.getElementById('empresa').value,
+        email: email,
+        telefono: document.getElementById('telefono').value,
+        tarea: document.getElementById('tarea').value,
+        salario: document.getElementById('salario').value,
+        tiempo: document.getElementById('tiempo').value,
+        frecuencia: document.getElementById('frecuencia').value,
+        ahorro_tiempo: (tiempoMensual * 0.4).toFixed(1) + 'h',
+        ahorro_dinero: Math.round(costeMensual * 0.4) + '€'
+      })
+    });
+    document.getElementById('nombre-resultado').textContent = nombre.split(' ')[0];
+    document.getElementById('ahorro-tiempo').textContent = (tiempoMensual * 0.4).toFixed(1) + 'h';
+    document.getElementById('ahorro-dinero').textContent = Math.round(costeMensual * 0.4) + '€';
+    document.getElementById('capture-form').style.display = 'none';
+    document.getElementById('final-result').style.display = 'block';
+    document.getElementById('final-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+</script>
+</body>
+</html>
